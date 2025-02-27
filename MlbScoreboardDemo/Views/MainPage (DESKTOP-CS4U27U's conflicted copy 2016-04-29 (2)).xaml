@@ -1,0 +1,145 @@
+﻿<Page
+    x:Class="MlbScoreboardDemo.Views.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MlbScoreboardDemo"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    DataContext="{StaticResource MainVM}">
+
+	<Grid>
+        <Grid.Background>
+            <ImageBrush ImageSource="/Assets/mlbBackground.jpg"
+						Stretch="UniformToFill" />
+        </Grid.Background>
+        <Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+            <RowDefinition Height="55*" />
+            <RowDefinition Height="45*" />
+        </Grid.RowDefinitions>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*" />
+		</Grid.ColumnDefinitions>
+
+		<!-- Date Display/Picker -->
+		<StackPanel Orientation="Horizontal" Margin="40,40,0,0" VerticalAlignment="Top" HorizontalAlignment="Left">
+			<Button Click="PreviousDateButton_OnClick" Style="{StaticResource MlbButtonStyle}">
+				<ContentControl Template="{StaticResource ArrowLeft}" />
+			</Button>
+			<TextBlock Text="{Binding SelectedDate, Converter={StaticResource DateToString}}" VerticalAlignment="Center" FontWeight="Light" FontSize="48" Margin="10,-8,10,0" />
+			<Button Click="NextDateButton_OnClick" Style="{StaticResource MlbButtonStyle}">
+				<ContentControl Template="{StaticResource ArrowRight}" />
+			</Button>
+		</StackPanel>
+
+		<!-- Thumbnail List -->
+		<ListView Grid.Row="1"
+				  HorizontalAlignment="Center" 
+				  VerticalAlignment="Bottom" 
+				  Width="auto" Height="300" 
+				  ItemsSource="{Binding GameList}"
+                  ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.HorizontalScrollBarVisibility="Auto"
+				  SelectedItem="{Binding SelectedItem, Mode=TwoWay}" 
+				  SelectionChanged="Selector_OnSelectionChanged"
+				  ItemContainerStyle="{StaticResource ListViewItemExpanded}"
+				  Visibility="{Binding LoadInProgress, Converter={StaticResource BoolToVisibility}, ConverterParameter=true}">
+			
+			<!-- Content layout for list items
+				 Additional style and animations in ListViewItemExpanded in Styles.xaml -->
+			<ListView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel x:Name="ContentPanel" Margin="0,0,0,40">
+
+						<!-- Title/Header -->
+                        <TextBlock HorizontalAlignment="Center" x:Name="TitleBlock" Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibility}}">
+                            <Run Text="{Binding AwayTeam.City}" />
+                            <Run Text=" @ " />
+                            <Run Text="{Binding HomeTeam.City}" />
+                        </TextBlock>
+
+						<!-- Image w/ Border -->
+                        <Border BorderThickness="2" Margin="0,5,0,0">
+                            <Border.BorderBrush>
+                                <SolidColorBrush Color="LightGray" Opacity="{Binding IsSelected, Converter={StaticResource BooleanToIntConverter}}" />
+                            </Border.BorderBrush>
+                            <Image Source="{Binding ThumbnailImage.Image}" Width="160" Margin="5" x:Name="Thumbnail" />
+                        </Border>
+
+						<!-- Detail text for selected item -->
+						<StackPanel Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibility}}" Margin="0,2,0,0" HorizontalAlignment="Center">
+
+							<!-- Finished or in-progress game info
+								 (display this only if game has started) -->
+							<StackPanel Visibility="{Binding GameHasStarted, Converter={StaticResource BoolToVisibility}}">
+								
+								<!-- Game Status -->
+								<StackPanel Visibility="{Binding StatusItem.IsPostponed, Converter={StaticResource BoolToVisibility}, ConverterParameter=true}">
+									<TextBlock Text="Final" HorizontalAlignment="Center" FontSize="12" Foreground="LightGray" Visibility="{Binding StatusItem.IsCompleted, Converter={StaticResource BoolToVisibility}}" />
+									
+									<!-- Current Inning -->
+									<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Visibility="{Binding StatusItem.IsCompleted, Converter={StaticResource BoolToVisibility}, ConverterParameter=true}">
+										<TextBlock Text="Top" FontSize="12" Foreground="LightGray" Visibility="{Binding StatusItem.TopInning, Converter={StaticResource BoolToVisibility}}" />
+										<TextBlock Text="Bottom" FontSize="12" Foreground="LightGray" Visibility="{Binding StatusItem.TopInning, Converter={StaticResource BoolToVisibility}, ConverterParameter=true}" />
+										<TextBlock Text="{Binding StatusItem.Inning}" FontSize="12" Foreground="LightGray" Margin="5,0,0,0" />
+									</StackPanel>
+								</StackPanel>
+
+								<!-- Postponed Status (display this instead of Game Status if game is postponed -->
+								<TextBlock Text="Postponed" HorizontalAlignment="Center" FontSize="12" Foreground="LightGray" Visibility="{Binding StatusItem.IsPostponed, Converter={StaticResource BoolToVisibility}}" />
+
+								<!-- Score Display -->
+								<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,-3,0,0" Visibility="{Binding StatusItem.IsPostponed, Converter={StaticResource BoolToVisibility}, ConverterParameter=true}">
+									<TextBlock Text="{Binding AwayTeam.Abbreviation}" Style="{StaticResource ScoreTextBlockStyle}" FontSize="20" />
+									<TextBlock Text="{Binding LineScore.AwayTeamRuns}" Style="{StaticResource ScoreTextBlockStyle}" Margin="12,0,0,0" />
+									<TextBlock Text="-" Style="{StaticResource ScoreTextBlockStyle}" Margin="5,0,5,0" />
+									<TextBlock Text="{Binding LineScore.HomeTeamRuns}" Style="{StaticResource ScoreTextBlockStyle}" Margin="0,0,12,0" />
+									<TextBlock Text="{Binding HomeTeam.Abbreviation}" Style="{StaticResource ScoreTextBlockStyle}" FontSize="20" />
+								</StackPanel>
+
+								<!-- Winning / Losing / Save pitcher dispaly
+									 (display this only if game is completed)-->
+								<StackPanel HorizontalAlignment="Left" Visibility="{Binding StatusItem.IsCompleted, Converter={StaticResource BoolToVisibility}}">
+									<TextBlock Style="{StaticResource PitchingTextBlockStyle}">
+										<Run Text="W: " />
+										<Run Text="{Binding WinningPitcher.Description}" />
+									</TextBlock>
+									<TextBlock Style="{StaticResource PitchingTextBlockStyle}">
+										<Run Text="L: " />
+										<Run Text="{Binding LosingPitcher.Description}" />
+									</TextBlock>
+									<TextBlock Style="{StaticResource PitchingTextBlockStyle}" Visibility="{Binding SavePitcher.IsEmpty, Converter={StaticResource BoolToVisibility}, ConverterParameter=true}">
+										<Run Text="S: " />
+										<Run Text="{Binding SavePitcher.SaveDescription}" />
+									</TextBlock>
+								</StackPanel>
+							</StackPanel>
+
+							<!-- Game Time Display
+								 (display this if game HAS NOT started -->
+							<TextBlock Style="{StaticResource ScoreTextBlockStyle}" FontSize="20" Visibility="{Binding GameHasStarted, Converter={StaticResource BoolToVisibility}, ConverterParameter=true}">
+								<Run Text="{Binding GameDate, Converter={StaticResource TimeToString}}" />
+								<Run Text="{Binding GameTimeZone}" />
+							</TextBlock>
+						</StackPanel>
+
+					</StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+        </ListView>
+
+		<ProgressRing IsActive="True" Visibility="{Binding LoadInProgress, Converter={StaticResource BoolToVisibility}}"
+					  Grid.Row="0"
+					  Grid.RowSpan="3"
+					  VerticalAlignment="Center"
+					  HorizontalAlignment="Center"
+					  Width="50" 
+					  Height="50" 
+					  Foreground="White" />
+	</Grid>
+</Page>

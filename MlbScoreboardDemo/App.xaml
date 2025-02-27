@@ -1,0 +1,23 @@
+﻿<Application
+    x:Class="MlbScoreboardDemo.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MlbScoreboardDemo"
+    xmlns:viewModels="using:MlbScoreboardDemo.ViewModels"
+    xmlns:valueConverters="using:MlbScoreboardDemo.ValueConverters"
+    RequestedTheme="Dark">
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <viewModels:MainVM x:Key="MainVM" />
+            <valueConverters:BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+            <valueConverters:BooleanToIntConverter x:Key="BooleanToIntConverter" />
+			<valueConverters:DateToStringConverter x:Key="DateToString" />
+			<valueConverters:TimeToStringConverter x:Key="TimeToString" />
+
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
